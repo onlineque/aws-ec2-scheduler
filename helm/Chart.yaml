@@ -1,0 +1,14 @@
+apiVersion: v2
+name: aws-ec2-scheduler
+description: A chart for aws-ec2-scheduler
+version: 1.0.1
+keywords:
+  - AWS
+  - EC2
+home: "https://github.com/onlineque/aws-ec2-scheduler"
+sources:
+  - "https://github.com/onlineque/aws-ec2-scheduler"
+maintainers:
+  - name: Vladimir Siman (online)
+    email: onlineque@seznam.cz
+

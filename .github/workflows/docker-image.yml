@@ -18,14 +18,15 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - uses: actions/checkout@v3
+
     - name: Build the Docker image
+    - uses: actions/checkout@v3
       run: docker build . --file Dockerfile --tag onlineque/aws-ec2-scheduler:$GITHUB_SHA
            docker tag onlineque/aws-ec2-scheduler:$GITHUB_SHA aws-ec2-scheduler:latest
+
     - name: Build and push
-      uses: docker/build-push-action@v4
+    - uses: docker/build-push-action@v4
       with:
         context: .
         push: true
         tags: onlineque/aws-ec2-scheduler:$GITHUB_SHA
-  
