@@ -8,3 +8,9 @@ The following tags needs to be assigned to an EC2 instance to make this work:
 * StopTime (HH:MM)
 
 In case the EC2 instance is stopped and it should run according to the schedule, it will be started and vice-versa.
+
+How to build the image:
+
+    docker build -t aws-ec2-scheduler:latest .
+
+
