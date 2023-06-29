@@ -8,19 +8,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"log"
+	"os"
 	"strings"
 	"time"
 )
 
-func getConfig() aws.Config {
+func Log(l *log.Logger, msg string) {
+	l.SetPrefix(time.Now().Format("2006-01-02 15:04:05") + " ")
+	l.Print(msg)
+}
+
+func getConfig(l *log.Logger) aws.Config {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
-		log.Fatal(err)
+		Log(l, err.Error())
+		os.Exit(1)
 	}
 	return cfg
 }
 
-func isActionNeeded(days string, startTime string, stopTime string, instanceState string) bool {
+func isActionNeeded(days string, startTime string, stopTime string, instanceState string, l *log.Logger) bool {
 	// abbreviation of the day today
 	today := time.Now().Weekday().String()[:3]
 	// current time
@@ -33,15 +40,18 @@ func isActionNeeded(days string, startTime string, stopTime string, instanceStat
 	timeToConvert := fmt.Sprintf("%v:%v", now.Hour(), now.Minute())
 	timeNow, err := time.Parse("15:04", timeToConvert)
 	if err != nil {
-		log.Fatal(err)
+		Log(l, err.Error())
+		return false
 	}
 	timeStartTime, err := time.Parse("15:04", startTime)
 	if err != nil {
-		log.Fatal(err)
+		Log(l, err.Error())
+		return false
 	}
 	timeStopTime, err := time.Parse("15:04", stopTime)
 	if err != nil {
-		log.Fatal(err)
+		Log(l, err.Error())
+		return false
 	}
 
 	if instanceState == "running" && timeStopTime.Before(timeNow) {
@@ -64,12 +74,14 @@ func getTag(tags []types.Tag, key string) string {
 }
 
 func main() {
-	cfg := getConfig()
+	l := log.New(os.Stdout, "", 0)
+	cfg := getConfig(l)
 	ec2Client := ec2.NewFromConfig(cfg)
 
 	result, err := ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{})
 	if err != nil {
-		log.Fatal(err)
+		Log(l, err.Error())
+		os.Exit(2)
 	}
 
 	for _, reservation := range result.Reservations {
@@ -87,7 +99,7 @@ func main() {
 				days,
 				startTime,
 				stopTime)
-			isActionNeeded := isActionNeeded(days, startTime, stopTime, instanceState)
+			isActionNeeded := isActionNeeded(days, startTime, stopTime, instanceState, l)
 			fmt.Printf("Action neeeded: %v\n", isActionNeeded)
 			if isActionNeeded && instanceState == "running" {
 				fmt.Println("-> stopping the instance")
@@ -95,7 +107,7 @@ func main() {
 					InstanceIds: []string{instanceId},
 				})
 				if err != nil {
-					log.Fatal(err)
+					Log(l, err.Error())
 				}
 			}
 			if isActionNeeded && instanceState == "stopped" {
@@ -104,7 +116,7 @@ func main() {
 					InstanceIds: []string{instanceId},
 				})
 				if err != nil {
-					log.Fatal(err)
+					Log(l, err.Error())
 				}
 			}
 		}
