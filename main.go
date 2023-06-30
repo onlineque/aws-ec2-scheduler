@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"log"
 	"os"
 	"strings"
@@ -24,6 +27,16 @@ func getConfig(l *log.Logger) aws.Config {
 		Log(l, err.Error())
 		os.Exit(1)
 	}
+	return cfg
+}
+
+func assumeRole(roleArn string, l *log.Logger) aws.Config {
+	cfg := getConfig(l)
+
+	stsSvc := sts.NewFromConfig(cfg)
+	creds := stscreds.NewAssumeRoleProvider(stsSvc, roleArn)
+
+	cfg.Credentials = aws.NewCredentialsCache(creds)
 	return cfg
 }
 
@@ -73,9 +86,18 @@ func getTag(tags []types.Tag, key string) string {
 	return ""
 }
 
-func main() {
-	l := log.New(os.Stdout, "", 0)
-	cfg := getConfig(l)
+func checkInstances(l *log.Logger, roleArn string) {
+	cfg := assumeRole(roleArn, l)
+
+	stsSvc := sts.NewFromConfig(cfg)
+	resultAssume, err := stsSvc.GetCallerIdentity(context.TODO(), &sts.GetCallerIdentityInput{})
+	if err != nil {
+		Log(l, err.Error())
+		os.Exit(4)
+	}
+
+	Log(l, fmt.Sprintf("Successfully assumed role: %s", *resultAssume.Arn))
+
 	ec2Client := ec2.NewFromConfig(cfg)
 
 	result, err := ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{})
@@ -120,5 +142,21 @@ func main() {
 				}
 			}
 		}
+	}
+}
+
+func main() {
+	l := log.New(os.Stdout, "", 0)
+
+	readFile, err := os.Open("/config")
+	if err != nil {
+		Log(l, err.Error())
+		os.Exit(5)
+	}
+	fileScanner := bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+
+	for fileScanner.Scan() {
+		checkInstances(l, fileScanner.Text())
 	}
 }
