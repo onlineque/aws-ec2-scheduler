@@ -43,3 +43,8 @@ jobs:
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+
+      - name: Package Helm chart
+        uses: flydiverny/helm-package-action@master
+        with:
+          args: "./helm"
