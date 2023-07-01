@@ -22,3 +22,10 @@ jobs:
     serviceAccount:
       name: "aws-ec2-scheduler"
       annotations: {}
+    volumes:
+      - name: config
+        configMap:
+          name: config
+    volumeMounts:
+      - name: config
+          mountPath: /config
