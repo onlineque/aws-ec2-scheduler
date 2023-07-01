@@ -159,15 +159,11 @@ func main() {
 	// check the AWS account where the pod is running first
 	checkInstances(l, "", false)
 
-	Log(l, "Checking other AWS accounts")
-
 	readFile, err := os.Open("/config")
 	if err != nil {
 		Log(l, err.Error())
 		os.Exit(5)
 	}
-
-	Log(l, "Config file opened successfully")
 
 	fileScanner := bufio.NewScanner(readFile)
 	fileScanner.Split(bufio.ScanLines)

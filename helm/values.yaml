@@ -29,3 +29,4 @@ jobs:
     volumeMounts:
       - name: config
         mountPath: /config
+        subPath: config
