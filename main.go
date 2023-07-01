@@ -121,16 +121,17 @@ func checkInstances(l *log.Logger, roleArn string, doAssume bool) {
 			instanceState := string(instance.State.Name)
 			instanceId := *instance.InstanceId
 
-			Log(l, fmt.Sprintf("Instance id: %s, name: %s, state: %s; Scheduler Days: %s, StartTime: %s, StopTime: %s\n",
+			actionNeeded := isActionNeeded(days, startTime, stopTime, instanceState, l)
+			Log(l, fmt.Sprintf("Instance id: %s, name: %s, state: %s; Scheduler Days: %s, StartTime: %s, StopTime: %s, Action needed: %v",
 				*instance.InstanceId,
 				getTag(instance.Tags, "Name"),
 				instanceState,
 				days,
 				startTime,
-				stopTime))
-			isActionNeeded := isActionNeeded(days, startTime, stopTime, instanceState, l)
-			Log(l, fmt.Sprintf("Action neeeded: %v\n", isActionNeeded))
-			if isActionNeeded && instanceState == "running" {
+				stopTime,
+				actionNeeded))
+
+			if actionNeeded && instanceState == "running" {
 				Log(l, "-> stopping the instance")
 				_, err := ec2Client.StopInstances(context.TODO(), &ec2.StopInstancesInput{
 					InstanceIds: []string{instanceId},
@@ -139,7 +140,7 @@ func checkInstances(l *log.Logger, roleArn string, doAssume bool) {
 					Log(l, err.Error())
 				}
 			}
-			if isActionNeeded && instanceState == "stopped" {
+			if actionNeeded && instanceState == "stopped" {
 				Log(l, "-> starting the instance")
 				_, err := ec2Client.StartInstances(context.TODO(), &ec2.StartInstancesInput{
 					InstanceIds: []string{instanceId},
