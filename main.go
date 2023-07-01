@@ -166,6 +166,9 @@ func main() {
 		Log(l, err.Error())
 		os.Exit(5)
 	}
+
+	Log(l, "Config file opened successfully")
+
 	fileScanner := bufio.NewScanner(readFile)
 	fileScanner.Split(bufio.ScanLines)
 
