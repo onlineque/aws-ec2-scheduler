@@ -6,7 +6,7 @@ jobs:
     image:
       repository: onlineque/aws-ec2-scheduler
       tag: latest
-      imagePullPolicy: IfNotPresent
+      imagePullPolicy: Always
     schedule: "*/10 * * * *"
     failedJobsHistoryLimit: 1
     successfulJobsHistoryLimit: 3
