@@ -86,8 +86,15 @@ func getTag(tags []types.Tag, key string) string {
 	return ""
 }
 
-func checkInstances(l *log.Logger, roleArn string) {
-	cfg := assumeRole(roleArn, l)
+func checkInstances(l *log.Logger, roleArn string, doAssume bool) {
+	// in case the check needs to run cross-account, assume first the target role
+	var cfg aws.Config
+
+	if doAssume {
+		cfg = assumeRole(roleArn, l)
+	} else {
+		cfg = getConfig(l)
+	}
 
 	stsSvc := sts.NewFromConfig(cfg)
 	resultAssume, err := stsSvc.GetCallerIdentity(context.TODO(), &sts.GetCallerIdentityInput{})
@@ -114,17 +121,17 @@ func checkInstances(l *log.Logger, roleArn string) {
 			instanceState := string(instance.State.Name)
 			instanceId := *instance.InstanceId
 
-			fmt.Printf("Instance id: %s, name: %s, state: %s\nScheduler Days: %s, StartTime: %s, StopTime: %s\n",
+			Log(l, fmt.Sprintf("Instance id: %s, name: %s, state: %s\nScheduler Days: %s, StartTime: %s, StopTime: %s\n",
 				*instance.InstanceId,
 				getTag(instance.Tags, "Name"),
 				instanceState,
 				days,
 				startTime,
-				stopTime)
+				stopTime))
 			isActionNeeded := isActionNeeded(days, startTime, stopTime, instanceState, l)
-			fmt.Printf("Action neeeded: %v\n", isActionNeeded)
+			Log(l, fmt.Sprintf("Action neeeded: %v\n", isActionNeeded))
 			if isActionNeeded && instanceState == "running" {
-				fmt.Println("-> stopping the instance")
+				Log(l, "-> stopping the instance")
 				_, err := ec2Client.StopInstances(context.TODO(), &ec2.StopInstancesInput{
 					InstanceIds: []string{instanceId},
 				})
@@ -133,7 +140,7 @@ func checkInstances(l *log.Logger, roleArn string) {
 				}
 			}
 			if isActionNeeded && instanceState == "stopped" {
-				fmt.Println("-> starting the instance")
+				Log(l, "-> starting the instance")
 				_, err := ec2Client.StartInstances(context.TODO(), &ec2.StartInstancesInput{
 					InstanceIds: []string{instanceId},
 				})
@@ -148,6 +155,9 @@ func checkInstances(l *log.Logger, roleArn string) {
 func main() {
 	l := log.New(os.Stdout, "", 0)
 
+	// check the AWS account where the pod is running first
+	checkInstances(l, "", false)
+
 	readFile, err := os.Open("/config")
 	if err != nil {
 		Log(l, err.Error())
@@ -157,6 +167,7 @@ func main() {
 	fileScanner.Split(bufio.ScanLines)
 
 	for fileScanner.Scan() {
-		checkInstances(l, fileScanner.Text())
+		// check all AWS accounts supplied from a config
+		checkInstances(l, fileScanner.Text(), true)
 	}
 }
