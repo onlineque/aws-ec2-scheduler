@@ -169,6 +169,8 @@ func main() {
 
 	for fileScanner.Scan() {
 		// check all AWS accounts supplied from a config
-		checkInstances(l, fileScanner.Text(), true)
+		roleToBeAssumed := fileScanner.Text()
+		Log(l, fmt.Sprintf("Role to be assumed: %v", roleToBeAssumed))
+		checkInstances(l, roleToBeAssumed, true)
 	}
 }
