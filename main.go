@@ -159,6 +159,8 @@ func main() {
 	// check the AWS account where the pod is running first
 	checkInstances(l, "", false)
 
+	Log(l, "Checking other AWS accounts")
+
 	readFile, err := os.Open("/config")
 	if err != nil {
 		Log(l, err.Error())
