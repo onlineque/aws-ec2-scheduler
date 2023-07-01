@@ -122,7 +122,7 @@ func checkInstances(l *log.Logger, roleArn string, doAssume bool) {
 			instanceId := *instance.InstanceId
 
 			actionNeeded := isActionNeeded(days, startTime, stopTime, instanceState, l)
-			Log(l, fmt.Sprintf("Instance id: %s, name: %s, state: %s; Scheduler Days: %s, StartTime: %s, StopTime: %s, Action needed: %v",
+			Log(l, fmt.Sprintf("Instance id: %s, name: %s, state: %s, scheduler days: %s, start time: %s, stop time: %s, action needed: %v",
 				*instance.InstanceId,
 				getTag(instance.Tags, "Name"),
 				instanceState,
