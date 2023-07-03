@@ -14,6 +14,7 @@ How to build the image:
     docker build -t aws-ec2-scheduler:latest .
 
 Helm chart installation:
+
     helm install -n aws-ec2-scheduler --create-namespace --set-file config=/path/to/config aws-ec2-scheduler ./helm
 
 Do not forget to create the config at /path/to/config (an example filepath) and put inside the roles of different AWS accounts this scheduler can assume and control EC2 instances.
