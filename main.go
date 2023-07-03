@@ -22,7 +22,7 @@ func Log(l *log.Logger, msg string) {
 }
 
 func getConfig(l *log.Logger) aws.Config {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("eu-west-1"))
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(os.Getenv("AWS_REGION")))
 	if err != nil {
 		Log(l, err.Error())
 		os.Exit(1)
