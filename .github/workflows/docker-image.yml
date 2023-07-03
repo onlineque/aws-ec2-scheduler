@@ -41,7 +41,7 @@ jobs:
           # Note: tags has to be all lower-case
           tags: |
             onlineque/aws-ec2-scheduler:latest
-            onlineque/aws-ec2-scheduler:${SHORT_SHA}
+            onlineque/aws-ec2-scheduler:${{ env.SHORT_SHA }}
           # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
 
