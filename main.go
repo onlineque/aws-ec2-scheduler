@@ -50,7 +50,7 @@ func isActionNeeded(days string, startTime string, stopTime string, instanceStat
 	}
 
 	now := time.Now()
-	timeToConvert := fmt.Sprintf("%v:%v", now.Hour(), now.Minute())
+	timeToConvert := fmt.Sprintf("%02d:%02d", now.Hour(), now.Minute())
 	timeNow, err := time.Parse("15:04", timeToConvert)
 	if err != nil {
 		Log(l, err.Error())
